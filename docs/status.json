@@ -1,0 +1,32 @@
+{
+ "updated": "2026-10-15T00:42:51.087Z",
+ "start": 10000,
+ "created": "2026-10-14",
+ "accounts": {
+  "hold": {
+   "equity": 10000,
+   "cash": 10000,
+   "pos": {}
+  },
+  "gap": {
+   "equity": 10000,
+   "cash": 10000,
+   "pos": {}
+  },
+  "trend": {
+   "equity": 10000,
+   "cash": 10000,
+   "pos": {}
+  }
+ },
+ "history": [
+  {
+   "day": "2026-10-14",
+   "hold": 10000,
+   "gap": 10000,
+   "trend": 10000
+  }
+ ],
+ "news": null,
+ "trades": []
+}

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Демо-бот</title>
+<meta name="theme-color" content="#0b0d12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+  :root { --bg:#f4f5f8; --card:#fff; --ink:#12151c; --muted:#6b7385; --line:#e3e6ee; --up:#0f9d58; --down:#d93025;
+          --hold:#7a8499; --gap:#ff7a2f; --trend:#5b6cff; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0b0d12; --card:#151922; --ink:#eef1f7; --muted:#8a93a8; --line:#252b38; --up:#3ddc84; --down:#ff6b6b; --hold:#9aa3b8; } }
+  :root[data-theme="dark"] { --bg:#0b0d12; --card:#151922; --ink:#eef1f7; --muted:#8a93a8; --line:#252b38; --up:#3ddc84; --down:#ff6b6b; --hold:#9aa3b8; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:max(16px,env(safe-area-inset-top)) 16px 32px; max-width:640px; margin:0 auto; }
+  header { display:flex; justify-content:space-between; align-items:baseline; margin:6px 0 14px; }
+  h1 { font-size:22px; letter-spacing:-.01em; }
+  .sub { color:var(--muted); font-size:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:12px; }
+  .accs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .acc { border-radius:12px; padding:10px; border:1px solid var(--line); }
+  .acc b { display:block; font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+  .acc .v { font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .acc .p { font-size:13px; font-variant-numeric:tabular-nums; }
+  .acc i { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; }
+  .up { color:var(--up); } .down { color:var(--down); }
+  h2 { font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; }
+  svg { width:100%; height:180px; display:block; }
+  .legend { display:flex; gap:14px; font-size:12px; color:var(--muted); margin-top:6px; }
+  .legend span::before { content:''; display:inline-block; width:10px; height:3px; border-radius:2px; margin-right:5px; vertical-align:middle; background:var(--c); }
+  .tr { display:grid; grid-template-columns:auto 1fr auto; gap:4px 10px; padding:9px 0; border-top:1px solid var(--line); font-size:13px; }
+  .tr:first-of-type { border-top:0; }
+  .tag { font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; align-self:start; }
+  .why { grid-column:2 / 4; color:var(--muted); font-size:12px; }
+  .num { font-variant-numeric:tabular-nums; text-align:right; }
+  .news { display:flex; flex-wrap:wrap; gap:6px; }
+  .news span { font-size:12px; padding:4px 8px; border-radius:8px; border:1px solid var(--line); font-variant-numeric:tabular-nums; }
+  .note { color:var(--muted); font-size:12px; line-height:1.5; }
+  .empty { color:var(--muted); font-size:13px; padding:8px 0; }
+</style>
+</head>
+<body>
+<header><h1>Демо-бот</h1><div class="sub" id="upd">загрузка…</div></header>
+
+<div class="card"><div class="accs" id="accs"></div></div>
+<div class="card"><h2>Счета по дням</h2><svg id="chart" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
+  <div class="legend"><span style="--c:var(--hold)">hold</span><span style="--c:var(--gap)">gap</span><span style="--c:var(--trend)">trend</span></div></div>
+<div class="card"><h2>Новости сегодня</h2><div class="news" id="news"></div></div>
+<div class="card"><h2>Последние сделки</h2><div id="trades"></div></div>
+<p class="note">Деньги виртуальные: по $10 000 на стратегию. hold — эталон «купил SPY и держу», gap — гэп вниз на открытии, trend — SPY/QQQ выше 200-дневной средней. Обновляется по будням в облаке.</p>
+
+<script>
+const NAMES = { hold:'hold', gap:'gap', trend:'trend' }, COL = { hold:'var(--hold)', gap:'var(--gap)', trend:'var(--trend)' };
+const $ = id => document.getElementById(id);
+const money = x => '$' + x.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+const pct = x => (x >= 0 ? '+' : '') + (x * 100).toFixed(2) + '%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+
+async function load() {
+  try {
+    const s = await (await fetch('status.json?t=' + Date.now())).json();
+    $('upd').textContent = 'обновлено ' + new Date(s.updated).toLocaleString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    $('accs').innerHTML = Object.keys(NAMES).map(k => {
+      const e = s.accounts[k].equity, r = e / s.start - 1;
+      return `<div class="acc"><b><i style="background:${COL[k]}"></i>${NAMES[k]}</b><div class="v">${money(e)}</div><div class="p ${r >= 0 ? 'up' : 'down'}">${pct(r)}</div></div>`;
+    }).join('');
+    chart(s.history || [], s.start);
+    const n = s.news && s.news.scores ? Object.entries(s.news.scores) : [];
+    $('news').innerHTML = n.length ? n.map(([t, v]) => `<span class="${v > 0 ? 'up' : v < 0 ? 'down' : ''}">${esc(t)} ${v > 0 ? '+' : ''}${v}</span>`).join('') : '<div class="empty">ещё не оценивались</div>';
+    $('trades').innerHTML = (s.trades || []).length ? s.trades.map(t => {
+      const buy = t.qty > 0;
+      return `<div class="tr"><span class="tag" style="background:${COL[t.strat]};color:#fff">${esc(t.strat)}</span>
+        <span><b class="${buy ? 'up' : 'down'}">${buy ? 'BUY' : 'SELL'}</b> ${esc(t.t)} · ${Math.abs(t.qty).toFixed(3)}</span>
+        <span class="num">${money(t.fill)}</span><span class="why">${esc(t.day)} — ${esc(t.why)}</span></div>`;
+    }).join('') : '<div class="empty">сделок пока нет — первая торговля в ближайший будний день</div>';
+  } catch (e) { $('upd').textContent = 'нет данных'; }
+}
+
+function chart(h, start) {
+  const svg = $('chart'), W = 600, Hh = 180, P = 10;
+  if (h.length < 2) { svg.innerHTML = `<text x="${W / 2}" y="${Hh / 2}" text-anchor="middle" fill="currentColor" opacity=".5" font-size="14">график появится после второго торгового дня</text>`; return; }
+  const vals = h.flatMap(d => [d.hold, d.gap, d.trend, start]), lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const x = i => P + i * (W - 2 * P) / (h.length - 1), y = v => Hh - P - (v - lo) / span * (Hh - 2 * P);
+  const line = k => `<polyline fill="none" stroke="${COL[k]}" stroke-width="${k === 'hold' ? 2 : 2.5}" stroke-linejoin="round" vector-effect="non-scaling-stroke" points="${h.map((d, i) => x(i) + ',' + y(d[k])).join(' ')}"/>`;
+  svg.innerHTML = `<line x1="0" x2="${W}" y1="${y(start)}" y2="${y(start)}" stroke="currentColor" opacity=".15" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>` + ['hold', 'trend', 'gap'].map(line).join('');
+}
+load(); setInterval(load, 60000);
+</script>
+</body>
+</html>

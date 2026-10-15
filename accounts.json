@@ -1,0 +1,32 @@
+{
+  "created": "2026-10-14",
+  "hold": {
+    "cash": 10000,
+    "pos": {},
+    "startDay": null,
+    "dayStartEquity": 10000,
+    "stopped": null
+  },
+  "gap": {
+    "cash": 10000,
+    "pos": {},
+    "startDay": null,
+    "dayStartEquity": 10000,
+    "stopped": null
+  },
+  "trend": {
+    "cash": 10000,
+    "pos": {},
+    "startDay": null,
+    "dayStartEquity": 10000,
+    "stopped": null
+  },
+  "history": [
+    {
+      "day": "2026-10-14",
+      "hold": 10000,
+      "gap": 10000,
+      "trend": 10000
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+# Демо-бот в облаке. Время в UTC: по два запуска на шаг (летнее и зимнее время), бот сам пропускает лишний и выходные.
+name: demo-bot
+on:
+  schedule:
+    - cron: '35 13 * * 1-5'   # open: 9:35 NY летом
+    - cron: '35 14 * * 1-5'   # open: 9:35 NY зимой
+    - cron: '40 19 * * 1-5'   # close: 15:40 NY летом
+    - cron: '40 20 * * 1-5'   # close: 15:40 NY зимой
+  workflow_dispatch:
+    inputs:
+      cmd: { description: 'open | close | publish', default: 'publish' }
+permissions:
+  contents: write
+concurrency: { group: bot, cancel-in-progress: false }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: bot
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ASKFREE_SKIP_GEMINI: '1'
+          TZ: America/Edmonton
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then CMD="${{ inputs.cmd }}";
+          elif [ "${{ github.event.schedule }}" = "35 13 * * 1-5" ] || [ "${{ github.event.schedule }}" = "35 14 * * 1-5" ]; then CMD=open;
+          else CMD=close; fi
+          node bot.js "$CMD"
+      - name: save
+        run: |
+          git config user.name "demo-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "bot $(date -u +%F\ %H:%M)" && git push)
