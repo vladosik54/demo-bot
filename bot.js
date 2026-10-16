@@ -34,8 +34,13 @@ const saveAcc = a => { if (!DRY) fs.writeFileSync(ACC, JSON.stringify(a, null, 2
 
 async function quote(t) {
   const j = (await (await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1m&range=1d`, { headers: H })).json()).chart.result[0];
-  const o = j.indicators.quote[0].open.find(x => x != null);
-  return { t, price: j.meta.regularMarketPrice, prevClose: j.meta.chartPreviousClose, open: o ?? j.meta.regularMarketPrice, period: j.meta.currentTradingPeriod.regular };
+  const q = j.indicators.quote[0], ts = j.timestamp || [];
+  const o = q.open.find(x => x != null);
+  const period = j.meta.currentTradingPeriod.regular;
+  // цена входа «на 9:35 NY»: cron GitHub опаздывает на часы, поэтому берём минутную свечу 9:35, а не текущую цену
+  const i935 = ts.findIndex((s, i) => s >= period.start + 300 && q.close[i] != null);
+  return { t, price: j.meta.regularMarketPrice, prevClose: j.meta.chartPreviousClose, open: o ?? j.meta.regularMarketPrice,
+    entry: i935 >= 0 ? q.close[i935] : j.meta.regularMarketPrice, period };
 }
 async function sma200(t) {
   const j = (await (await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1y`, { headers: H })).json()).chart.result[0];
@@ -44,12 +49,12 @@ async function sma200(t) {
 }
 
 // новости за последние сутки → оценка роутером от -2 до +2 на тикер
-async function newsScores(tickers) {
+async function newsScores(tickers, cutoff = Date.now() / 1000) {
   const items = [];
   for (const t of tickers) {
     try {
       const j = await (await fetch(`https://query1.finance.yahoo.com/v1/finance/search?q=${t}&newsCount=6&quotesCount=0`, { headers: H })).json();
-      for (const n of j.news || []) if (Date.now() / 1000 - n.providerPublishTime < 86400) items.push(`${t}: ${n.title}`);
+      for (const n of j.news || []) if (n.providerPublishTime <= cutoff && cutoff - n.providerPublishTime < 86400) items.push(`${t}: ${n.title}`);
     } catch {}
   }
   const scores = Object.fromEntries(tickers.map(t => [t, 0]));
@@ -127,9 +132,12 @@ function checkStop(name, a, px) {
 
   if (cmd === 'open') {
     // эталон: один раз купить SPY на весь счёт
-    if (!A.hold.pos.SPY) trade('hold', A.hold, 'SPY', A.hold.cash / (Q.SPY.price * (1 + COST)), Q.SPY.price, 'эталон: купил и держу');
+    if (!A.hold.pos.SPY) trade('hold', A.hold, 'SPY', A.hold.cash / (Q.SPY.entry * (1 + COST)), Q.SPY.entry, 'эталон: купил и держу');
 
-    const { scores, items, who } = await newsScores(GAP_LIST);
+    // запуск опоздал — честно торгуем «как в 9:35»: цена свечи 9:35 и только новости до неё
+    const late = Math.round((now - p.start - 300) / 60);
+    if (late > 10) journal(`- запуск опоздал на ${late} мин — вход по цене 9:35, новости только до 9:35`);
+    const { scores, items, who } = await newsScores(GAP_LIST, Math.min(now, p.start + 300));
     journal(`- новости (${items.length} заголовков за сутки${who ? ', ' + who : ''}): ${JSON.stringify(scores)}`);
     A.lastNews = { day: today(), scores };
 
@@ -139,7 +147,7 @@ function checkStop(name, a, px) {
       const skipped = GAP_LIST.filter(t => Q[t].open < Q[t].prevClose * (1 - GAP_MIN) && (scores[t] ?? 0) <= -1);
       if (skipped.length) journal(`- [gap] гэп вниз, но плохие новости — пропуск: ${skipped.join(', ')}`);
       const per = Math.min(A.gap.cash / Math.max(picks.length, 1), equity(A.gap, px) * MAX_POS);
-      for (const t of picks) trade('gap', A.gap, t, per / (Q[t].price * (1 + COST)), Q[t].price, `гэп ${pct(Q[t].open / Q[t].prevClose - 1)}, новости ${scores[t] ?? 0}`);
+      for (const t of picks) trade('gap', A.gap, t, per / (Q[t].entry * (1 + COST)), Q[t].entry, `гэп ${pct(Q[t].open / Q[t].prevClose - 1)}, новости ${scores[t] ?? 0}`);
       if (!picks.length && !skipped.length) journal(`- [gap] гэпов вниз больше ${GAP_MIN * 100}% нет`);
     }
   }
