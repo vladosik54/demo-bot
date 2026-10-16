@@ -23,9 +23,12 @@ function logUsage(ai, ok, extra) {
   try { fs.appendFileSync(path.join(__dirname, 'ai-usage.jsonl'), JSON.stringify({ ts: Date.now(), ai, ok, ...extra }) + '\n'); } catch {}
 }
 function key(name) {
-  if (process.env[name]) return process.env[name];
+  // BOM/пробелы срезаем: ключ, залитый в GitHub через PowerShell-пайп, приходит с U+FEFF и ломает заголовок
+  const clean = s => (s || '').replace(/^﻿/, '').trim();
+  if (clean(process.env[name])) return clean(process.env[name]);
+  if (process.platform !== 'win32') return '';
   const r = spawnSync('powershell', ['-NoProfile', '-Command', `[Environment]::GetEnvironmentVariable('${name}','User')`], { encoding: 'utf8' });
-  return (r.stdout || '').trim();
+  return clean(r.stdout);
 }
 
 // OpenAI-совместимые API
