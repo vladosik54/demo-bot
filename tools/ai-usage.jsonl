@@ -1,2 +1,4 @@
 {"ts":1792086690502,"ai":"groq","ok":false,"err":"TypeError: Cannot convert argument to a ByteString because the character at inde"}
 {"ts":1792086690505,"ai":"openrouter","ok":false,"err":"TypeError: Cannot convert argument to a ByteString because the character at inde"}
+{"ts":1792112560905,"ai":"groq","ok":false,"err":"TypeError: Cannot convert argument to a ByteString because the character at inde"}
+{"ts":1792112560909,"ai":"openrouter","ok":false,"err":"TypeError: Cannot convert argument to a ByteString because the character at inde"}

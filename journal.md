@@ -17,3 +17,4 @@
 - [trend] BUY 6.4752 SPY @ $772.18 — ребаланс по тренду
 - [trend] BUY 6.8647 QQQ @ $728.36 — ребаланс по тренду
 - итог: hold $9998.18 (-0.02%) · gap $9989.88 (-0.10%) · trend $9995.00 (-0.05%)
+- новости: роутер не ответил понятно, считаю все нейтральными ([groq] ошибка: TypeError: Cannot convert argument to a ByteString because the character at index 7 has a value of 65279 which is greater than 255. [openrouter] ошибка: TypeError: Cannot convert argument to a ByteString because the character at index 7 has a value of 65279 which is greater than 255. все бесплатные ИИ недоступны — сделай сам)
