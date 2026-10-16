@@ -18,3 +18,9 @@
 - [trend] BUY 6.8647 QQQ @ $728.36 — ребаланс по тренду
 - итог: hold $9998.18 (-0.02%) · gap $9989.88 (-0.10%) · trend $9995.00 (-0.05%)
 - новости: роутер не ответил понятно, считаю все нейтральными ([groq] ошибка: TypeError: Cannot convert argument to a ByteString because the character at index 7 has a value of 65279 which is greater than 255. [openrouter] ошибка: TypeError: Cannot convert argument to a ByteString because the character at index 7 has a value of 65279 which is greater than 255. все бесплатные ИИ недоступны — сделай сам)
+
+## 2026-10-16 open
+- запуск опоздал на 244 мин — вход по цене 9:35, новости только до 9:35
+- новости (2 заголовков за сутки, [groq · short]): {"SPY":0,"QQQ":-1,"AAPL":-1,"MSFT":-1,"NVDA":-1,"TSLA":0}
+- [gap] гэпов вниз больше 1% нет
+- итог: hold $9905.68 (-0.94%) · gap $9989.88 (-0.10%) · trend $9846.00 (-1.54%)
