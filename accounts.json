@@ -5,14 +5,14 @@
     "pos": {
       "SPY": 12.954529546235964
     },
-    "startDay": "2026-11-12",
-    "dayStartEquity": 9808.133410046174,
+    "startDay": "2026-11-13",
+    "dayStartEquity": 9749.838027088112,
     "stopped": null
   },
   "gap": {
     "cash": 9381.485033539335,
     "pos": {},
-    "startDay": "2026-11-12",
+    "startDay": "2026-11-13",
     "dayStartEquity": 9381.485033539335,
     "stopped": null
   },
@@ -22,8 +22,8 @@
       "SPY": 6.475208605158544,
       "QQQ": 6.427422925536222
     },
-    "startDay": "2026-11-12",
-    "dayStartEquity": 9325.669573803898,
+    "startDay": "2026-11-13",
+    "dayStartEquity": 9234.570778078516,
     "stopped": null
   },
   "history": [
@@ -158,17 +158,23 @@
       "hold": 9808.13,
       "gap": 9381.49,
       "trend": 9325.67
+    },
+    {
+      "day": "2026-11-13",
+      "hold": 9749.84,
+      "gap": 9381.49,
+      "trend": 9234.57
     }
   ],
-  "lastOpen": "2026-11-10",
+  "lastOpen": "2026-11-13",
   "lastNews": {
-    "day": "2026-11-10",
+    "day": "2026-11-13",
     "scores": {
-      "SPY": 1,
-      "QQQ": 1,
+      "SPY": -1,
+      "QQQ": 0,
       "AAPL": 0,
       "MSFT": 0,
-      "NVDA": 0,
+      "NVDA": 1,
       "TSLA": 0
     }
   },
